@@ -1,10 +1,9 @@
 @echo off
-setlocal enabledelayedexpansion
-rem Run from the repo root
+setlocal
 cd /d "%~dp0"
 
 if not exist .git (
-  echo This folder isn't a git repo. Open your project root and try again.
+  echo Not a git repo. Open your project root and try again.
   exit /b 1
 )
 
@@ -19,23 +18,37 @@ if not exist "%FILE%" (
   exit /b 1
 )
 
+rem Normalize line-endings handling in this repo
+git config core.autocrlf false >nul
+git config apply.whitespace nowarn >nul
+
 echo Applying "%FILE%"...
-git apply --whitespace=nowarn "%FILE%" || goto :fail
+rem 1) normal apply
+git apply "%FILE%" --whitespace=nowarn
+if errorlevel 1 (
+  echo First attempt failed. Trying 3-way merge...
+  rem 2) try 3-way (uses your current files as base)
+  git apply "%FILE%" --whitespace=nowarn --3way
+  if errorlevel 1 (
+    echo 3-way failed. Creating .rej files with rejects...
+    rem 3) last resort: produce .rej files you can inspect if needed
+    git apply "%FILE%" --whitespace=nowarn --reject
+    if errorlevel 1 (
+      echo Patch failed completely. To discard partial changes:
+      echo   git reset --hard
+      exit /b 1
+    )
+  )
+)
 
 echo.
 set /p DO_COMMIT=Commit the changes now? [y/N] :
 if /I "%DO_COMMIT%"=="Y" (
-  git add -A && git commit -m "Apply %~nx1" && echo Done. && exit /b 0
-  goto :fail
+  git add -A && git commit -m "Apply %~nx1"
+  echo Done.
 ) else (
   echo Applied but not committed. You can run:
   echo   git add -A
   echo   git commit -m "Apply %~nx1"
-  exit /b 0
 )
-
-:fail
-echo.
-echo Patch failed. To discard any changes:
-echo   git reset --hard
-exit /b 1
+exit /b 0
