@@ -1,0 +1,18 @@
+diff --git a/TODO.md b/TODO.md
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/TODO.md
+@@ -0,0 +1,12 @@
++# Gym Tracker — TODO
++
++- [ ] Seed default workouts only once
++- [ ] Workouts tab polish (thumbnails, sorting)
++- [ ] Edit/delete logged sets (done) ✅
++- [ ] Export / import data (JSON)
++- [ ] PWA install (Add to Home Screen)
++
++Tip: apply patches with
++
++  apply-patch.bat <file.patch>
++
