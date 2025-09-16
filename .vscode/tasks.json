@@ -5,6 +5,7 @@
             "label": "npm: dev",
             "type": "shell",
             "command": "npm run dev",
+            "isBackground": true,
             "options": {
                 "shell": {
                     "executable": "C:\\Windows\\System32\\cmd.exe",
@@ -15,7 +16,19 @@
                 "reveal": "always",
                 "panel": "dedicated"
             },
-            "problemMatcher": []
+            "problemMatcher": [
+                {
+                    "owner": "vite-ready",
+                    "pattern": {
+                        "regexp": "Local:.*(http://\\S+)"
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*",
+                        "endsPattern": "Local:.*http://"
+                    }
+                }
+            ]
         }
     ]
 }
