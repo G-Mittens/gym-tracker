@@ -35,6 +35,45 @@ export default function App() {
   const [editLink, setEditLink] = useState("");
   const [editPhotos, setEditPhotos] = useState<string[]>([]);
 
+  // collapsed state for workouts list (keeps details hidden until expanded)
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  function toggleExpanded(id: string) {
+    setExpandedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [id, ...prev]));
+  }
+
+  const EXPANDED_KEY = "gym-tracker:expandedWorkouts";
+
+  // load persisted expanded ids on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(EXPANDED_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as string[] | null;
+        if (Array.isArray(parsed)) {
+          setExpandedIds(parsed.filter(id => exercises.some(e => e.id === id)));
+        }
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // persist when expandedIds changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(EXPANDED_KEY, JSON.stringify(expandedIds));
+    } catch {
+      // ignore quota errors
+    }
+  }, [expandedIds]);
+
+  // prune expanded ids when exercises list changes (removes stale ids)
+  useEffect(() => {
+    setExpandedIds(prev => prev.filter(id => exercises.some(e => e.id === id)));
+  }, [exercises]);
+
   // edit set
   const [editSetId, setEditSetId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("0");
@@ -136,6 +175,8 @@ export default function App() {
     const xs = await db.exercises.toArray();
     setExercises(xs);
     if (exerciseId === id) setExerciseId(xs[0]?.id || "");
+    // remove from expanded ids (and persisted storage will update via effect)
+    setExpandedIds(prev => prev.filter(x => x !== id));
   }
 
   /* edit set */
@@ -298,15 +339,21 @@ export default function App() {
             {exercises.length === 0 && <div style={{ opacity: 0.7 }}>No workouts yet.</div>}
             {exercises.map(ex => {
               const editing = editId === ex.id;
+              const expanded = expandedIds.includes(ex.id) || editing;
               return (
                 <div key={ex.id} style={{ borderTop: "1px solid #222", padding: "10px 0" }}>
                   {!editing ? (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                       <div>
-                        <div style={{ fontWeight: 600 }}>{ex.name} {ex.type === "time" ? "⏱" : ""}</div>
-                        {ex.description && <div style={{ opacity: 0.9 }}>{ex.description}</div>}
-                        {ex.link && <div><a href={ex.link} target="_blank" rel="noreferrer" style={{ color: "#7fb1ff" }}>Tutorial</a></div>}
-                        {ex.photos?.length ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <button aria-label={expanded ? "Collapse" : "Expand"} onClick={() => toggleExpanded(ex.id)} style={toggleBtn}>
+                            {expanded ? "▾" : "▸"}
+                          </button>
+                          <div style={{ fontWeight: 600 }}>{ex.name} {ex.type === "time" ? "⏱" : ""}</div>
+                        </div>
+                        {expanded && ex.description && <div style={{ opacity: 0.9 }}>{ex.description}</div>}
+                        {expanded && ex.link && <div><a href={ex.link} target="_blank" rel="noreferrer" style={{ color: "#7fb1ff" }}>Tutorial</a></div>}
+                        {expanded && ex.photos?.length ? (
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                             {ex.photos.map((src, i) => (
                               <img key={i} src={src} alt={`ex-${i}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid #333" }} />
@@ -385,3 +432,17 @@ const chip = (active: boolean): React.CSSProperties => ({
   userSelect: "none",
   cursor: "pointer",
 });
+
+const toggleBtn: React.CSSProperties = {
+  width: 28,
+  height: 28,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 6,
+  border: "1px solid #333",
+  background: "transparent",
+  color: "#eaeaea",
+  cursor: "pointer",
+  padding: 0,
+};
