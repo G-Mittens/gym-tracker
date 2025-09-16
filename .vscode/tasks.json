@@ -5,6 +5,12 @@
             "label": "npm: dev",
             "type": "shell",
             "command": "npm run dev",
+            "options": {
+                "shell": {
+                    "executable": "C:\\Windows\\System32\\cmd.exe",
+                    "args": ["/c"]
+                }
+            },
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated"
