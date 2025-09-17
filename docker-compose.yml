@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm ci --silent && npm run dev -- --host 0.0.0.0"
+
+  preview:
+    build:
+      context: .
+      target: prod
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production

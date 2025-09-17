@@ -2,10 +2,15 @@
 export const rid = () => Math.random().toString(36).slice(2, 9);
 
 export async function readFilesAsDataUrls(files: FileList | File[], max = 3): Promise<string[]> {
-  const arr = Array.from(files as any).slice(0, max);
+  let arr: File[] = [];
+  if (files instanceof FileList) {
+    arr = Array.from(files).slice(0, max);
+  } else {
+    arr = files.slice(0, max);
+  }
   return Promise.all(
     arr.map(
-      (f: File) =>
+      (f) =>
         new Promise<string>((resolve, reject) => {
           const fr = new FileReader();
           fr.onload = () => resolve(String(fr.result ?? ""));

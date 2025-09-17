@@ -298,9 +298,53 @@ export default function App() {
           <section style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ marginTop: 0 }}>Your Workouts</h2>
-              <button onClick={() => setShowManager(v => !v)} style={btn}>
-                {showManager ? "Close" : "Add workout"}
-              </button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button onClick={() => setShowManager(v => !v)} style={btn}>
+                  {showManager ? "Close" : "Add workout"}
+                </button>
+                <button
+                  style={{ ...btnGhost, padding: "8px 10px", fontWeight: 600 }}
+                  onClick={async () => {
+                    const ex = await db.exercises.toArray();
+                    const ss = await db.sets.toArray();
+                    const data = { exercises: ex, sets: ss };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "gym-tracker-backup.json";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Export
+                </button>
+                <label style={{ ...btnGhost, padding: "6px 8px", cursor: "pointer" }}>
+                  Import
+                  <input
+                    type="file"
+                    accept="application/json"
+                    onChange={async e => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      try {
+                        const text = await f.text();
+                        const parsed = JSON.parse(text);
+                        if (Array.isArray(parsed.exercises)) await db.exercises.bulkPut(parsed.exercises);
+                        if (Array.isArray(parsed.sets)) await db.sets.bulkPut(parsed.sets);
+                        const xs = await db.exercises.toArray();
+                        setExercises(xs);
+                        const ss = await db.sets.orderBy("ts").reverse().limit(50).toArray();
+                        setSets(ss);
+                        alert("Import complete");
+                      } catch {
+                        alert("Invalid file");
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
             </div>
 
             {showManager && (

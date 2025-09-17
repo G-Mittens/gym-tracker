@@ -20,12 +20,12 @@
                 {
                     "owner": "vite-ready",
                     "pattern": {
-                        "regexp": "Local:.*(http://\\S+)"
+                        "regexp": "Local:\\s+(http://\\S+)"
                     },
                     "background": {
                         "activeOnStart": true,
                         "beginsPattern": ".*",
-                        "endsPattern": "Local:.*http://"
+                        "endsPattern": "Local:\\s+http://"
                     }
                 }
             ]
