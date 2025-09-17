@@ -39,6 +39,23 @@ export default tseslint.config([
 ])
 ```
 
+## Deploy to Vercel (one-click)
+
+1. Push your repository to GitHub.
+2. Sign in to https://vercel.com and import the project.
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+3. Deploy — Vercel will build and host your site and provide a public URL.
+
+Or deploy from your machine with the Vercel CLI:
+
+```bash
+npm i -g vercel
+vercel login
+vercel --prod
+```
+
+
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
