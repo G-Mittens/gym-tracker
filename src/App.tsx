@@ -346,10 +346,38 @@ export default function App() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <button aria-label={expanded ? "Collapse" : "Expand"} onClick={() => toggleExpanded(ex.id)} style={toggleBtn}>
-                            {expanded ? "▾" : "▸"}
-                          </button>
-                          <div style={{ fontWeight: 600 }}>{ex.name} {ex.type === "time" ? "⏱" : ""}</div>
+                          {/* compact arrow toggle only */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <button
+                              aria-label={expanded ? "Collapse" : "Expand"}
+                              onClick={() => toggleExpanded(ex.id)}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: 6,
+                                border: "1px solid #333",
+                                background: expanded ? "#2d6cdf" : "#222",
+                                color: "#eaeaea",
+                                cursor: "pointer",
+                                padding: 0,
+                              }}
+                            >
+                              {expanded ? "▾" : "▸"}
+                            </button>
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => toggleExpanded(ex.id)}
+                              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') toggleExpanded(ex.id); }}
+                              style={{ fontWeight: 600, cursor: "pointer", userSelect: "none" }}
+                              title={expanded ? "Click to collapse" : "Click to expand"}
+                            >
+                              {ex.name} {ex.type === "time" ? "⏱" : ""}
+                            </div>
+                          </div>
                         </div>
                         {expanded && ex.description && <div style={{ opacity: 0.9 }}>{ex.description}</div>}
                         {expanded && ex.link && <div><a href={ex.link} target="_blank" rel="noreferrer" style={{ color: "#7fb1ff" }}>Tutorial</a></div>}
@@ -361,9 +389,10 @@ export default function App() {
                           </div>
                         ) : null}
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         <button style={btnSmall} onClick={() => beginEditExercise(ex)}>Edit</button>
                         <button style={btnDanger} onClick={() => deleteExercise(ex.id)}>Delete</button>
+                        {/* left-side arrow toggle now handles expand/collapse */}
                       </div>
                     </div>
                   ) : (
@@ -432,17 +461,3 @@ const chip = (active: boolean): React.CSSProperties => ({
   userSelect: "none",
   cursor: "pointer",
 });
-
-const toggleBtn: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 6,
-  border: "1px solid #333",
-  background: "transparent",
-  color: "#eaeaea",
-  cursor: "pointer",
-  padding: 0,
-};
