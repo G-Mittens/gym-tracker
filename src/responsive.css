@@ -1,0 +1,6 @@
+@media (max-width: 560px) {
+  .tool-box { padding: 12px !important; }
+  .plate-box { min-width: 54px !important; padding: 6px 8px !important; }
+  .reverse-plate-box { width: 60px !important; }
+  .quicklog-flex { flex-direction: column !important; align-items: flex-start !important; }
+}

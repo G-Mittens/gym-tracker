@@ -1,4 +1,5 @@
 import React from "react";
+import { toolBox, thinSeparator } from "../theme";
 import type { Exercise } from "../db";
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 export const WorkoutsTab: React.FC<Props> = ({ exercises, expandedIds, showManager, newName, newType, newDesc, newLink, newPhotos, editId, editName, editType, editDesc, editLink, editPhotos, setNewName, setNewType, setNewDesc, setNewLink, setShowManager, beginEditExercise, saveExercise, saveEditExercise, cancelEditExercise, deleteExercise, handleAddPhotos, handleEditPhotos, toggleExpanded, styles }) => {
   return (
     <section style={styles.card}>
+      <div style={toolBox}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2 style={{ marginTop: 0 }}>Your Workouts</h2>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -87,11 +89,12 @@ export const WorkoutsTab: React.FC<Props> = ({ exercises, expandedIds, showManag
       )}
 
       {exercises.length === 0 && <div style={{ opacity: 0.7 }}>No workouts yet.</div>}
-      {exercises.map(ex => {
+      {exercises.map((ex, idx) => {
         const editing = editId === ex.id;
         const expanded = expandedIds.includes(ex.id) || editing;
         return (
-          <div key={ex.id} style={{ borderTop: "1px solid #222", padding: "10px 0" }}>
+          <div key={ex.id} style={{ padding: "12px 0" }}>
+            {idx > 0 && <div style={thinSeparator} />}
             {!editing ? (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                 <div>
@@ -175,6 +178,7 @@ export const WorkoutsTab: React.FC<Props> = ({ exercises, expandedIds, showManag
           </div>
         );
       })}
+      </div>
     </section>
   );
 };

@@ -49,6 +49,7 @@ export async function seedExercisesIfEmpty() {
     { id: "tricep_under",      name: "Unilateral Cable Tricep Ext (Underhand)", type: "weight" },
     { id: "plank",             name: "Plank",                                type: "time" },
     { id: "block_5k",          name: "5K Training Block",                    type: "time" },
+  { id: "rest_timer",        name: "Rest",                                 type: "time" },
   ];
   await db.exercises.bulkPut(defaults) // idempotent upsert
 

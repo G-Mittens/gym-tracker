@@ -84,6 +84,60 @@ export default function App() {
   const [editMM, setEditMM] = useState("0");
   const [editSS, setEditSS] = useState("00");
 
+  // countdown timer (rest) & stopwatch
+  const [activeTimerSec, setActiveTimerSec] = useState<number | null>(null); // remaining seconds
+  const [stopwatchSec, setStopwatchSec] = useState(0);
+  const [stopwatchRunning, setStopwatchRunning] = useState(false);
+
+  // timer effect (pure countdown; logging occurs at start)
+  useEffect(()=>{
+    if (activeTimerSec == null) return;
+    if (activeTimerSec <= 0) {
+      // play completion sound (short beep sequence)
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        function beep(tOffset:number, freq:number, dur:number){
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(ctx.destination);
+          const now = ctx.currentTime + tOffset;
+            g.gain.setValueAtTime(0.0001, now);
+            g.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+          o.start(now); o.stop(now + dur);
+        }
+        beep(0, 880, 0.18);
+        beep(0.20, 660, 0.22);
+      } catch {}
+      setActiveTimerSec(null);
+      return;
+    }
+    const id = setTimeout(()=> setActiveTimerSec(s => (s==null? null : s-1)), 1000);
+    return () => clearTimeout(id);
+  }, [activeTimerSec]);
+
+  function startTimer(sec: number) {
+    if (activeTimerSec != null) return; // ignore if already running
+    setActiveTimerSec(sec);
+    // log immediately
+    (async () => {
+      const entry: SetEntry = { id: rid(), ts: new Date().toISOString(), exerciseId: "rest_timer", durationSec: sec };
+      await db.sets.add(entry);
+      setSets(prev => [entry, ...prev]);
+    })();
+  }
+  function cancelTimer() { setActiveTimerSec(null); }
+
+  // stopwatch effect
+  useEffect(()=>{
+    if (!stopwatchRunning) return;
+    const id = setInterval(()=> setStopwatchSec(s=>s+1), 1000);
+    return ()=> clearInterval(id);
+  }, [stopwatchRunning]);
+  function startStopwatch() { setStopwatchRunning(true); }
+  function stopStopwatch() { setStopwatchRunning(false); }
+  function resetStopwatch() { setStopwatchRunning(false); setStopwatchSec(0); }
+
   /* load */
   useEffect(() => {
     (async () => {
@@ -240,6 +294,14 @@ export default function App() {
           setEditMM={setEditMM} setEditSS={setEditSS} setEditWeight={setEditWeight} setEditReps={setEditReps}
           styles={{ card, row3, label, inp, inpSmall, btn, btnSmall, btnDanger, btnGhostSmall }}
           secondsToMMSS={secondsToMMSS}
+          activeTimerSec={activeTimerSec}
+          startTimer={startTimer}
+          cancelTimer={cancelTimer}
+          stopwatchRunning={stopwatchRunning}
+            stopwatchSec={stopwatchSec}
+            startStopwatch={startStopwatch}
+            stopStopwatch={stopStopwatch}
+            resetStopwatch={resetStopwatch}
         />
       )}
       {tab === "workouts" && (
