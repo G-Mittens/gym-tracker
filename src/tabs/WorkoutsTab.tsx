@@ -7,7 +7,7 @@ interface Props {
   showManager: boolean;
   newName: string; newType: "weight" | "time"; newDesc: string; newLink: string; newPhotos: string[];
   editId: string | null; editName: string; editType: "weight" | "time"; editDesc: string; editLink: string; editPhotos: string[];
-  setNewName(v: string): void; setNewType(v: "weight" | "time"): void; setNewDesc(v: string): void; setNewLink(v: string): void; setNewPhotos(v: string[]): void;
+  setNewName(v: string): void; setNewType(v: "weight" | "time"): void; setNewDesc(v: string): void; setNewLink(v: string): void;
   setShowManager(v: boolean): void;
   beginEditExercise(ex: Exercise): void; saveExercise(): void; saveEditExercise(): void; cancelEditExercise(): void; deleteExercise(id: string): void;
   handleAddPhotos(e: React.ChangeEvent<HTMLInputElement>): void; handleEditPhotos(e: React.ChangeEvent<HTMLInputElement>): void;
@@ -15,7 +15,7 @@ interface Props {
   styles: { card: React.CSSProperties; label: React.CSSProperties; inp: React.CSSProperties; btn: React.CSSProperties; btnGhost: React.CSSProperties; chip(active:boolean): React.CSSProperties; btnSmall: React.CSSProperties; btnDanger: React.CSSProperties; inpSmall: React.CSSProperties; btnGhostSmall: React.CSSProperties; };
 }
 
-export const WorkoutsTab: React.FC<Props> = ({ exercises, expandedIds, showManager, newName, newType, newDesc, newLink, newPhotos, editId, editName, editType, editDesc, editLink, editPhotos, setNewName, setNewType, setNewDesc, setNewLink, setNewPhotos, setShowManager, beginEditExercise, saveExercise, saveEditExercise, cancelEditExercise, deleteExercise, handleAddPhotos, handleEditPhotos, toggleExpanded, styles }) => {
+export const WorkoutsTab: React.FC<Props> = ({ exercises, expandedIds, showManager, newName, newType, newDesc, newLink, newPhotos, editId, editName, editType, editDesc, editLink, editPhotos, setNewName, setNewType, setNewDesc, setNewLink, setShowManager, beginEditExercise, saveExercise, saveEditExercise, cancelEditExercise, deleteExercise, handleAddPhotos, handleEditPhotos, toggleExpanded, styles }) => {
   return (
     <section style={styles.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

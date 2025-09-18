@@ -249,7 +249,7 @@ export default function App() {
           showManager={showManager}
           newName={newName} newType={newType} newDesc={newDesc} newLink={newLink} newPhotos={newPhotos}
           editId={editId} editName={editName} editType={editType} editDesc={editDesc} editLink={editLink} editPhotos={editPhotos}
-          setNewName={setNewName} setNewType={setNewType} setNewDesc={setNewDesc} setNewLink={setNewLink} setNewPhotos={setNewPhotos}
+          setNewName={setNewName} setNewType={setNewType} setNewDesc={setNewDesc} setNewLink={setNewLink}
           setShowManager={setShowManager}
           beginEditExercise={beginEditExercise} saveExercise={saveExercise} saveEditExercise={saveEditExercise} cancelEditExercise={cancelEditExercise} deleteExercise={deleteExercise}
           handleAddPhotos={handleAddPhotos} handleEditPhotos={handleEditPhotos}
