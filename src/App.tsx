@@ -95,7 +95,7 @@ export default function App() {
     if (activeTimerSec <= 0) {
       // play completion sound (short beep sequence)
       try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const ctx = new (window.AudioContext || (window as (typeof window & { webkitAudioContext: typeof AudioContext })).webkitAudioContext)();
         function beep(tOffset:number, freq:number, dur:number){
           const o = ctx.createOscillator();
           const g = ctx.createGain();
@@ -108,7 +108,9 @@ export default function App() {
         }
         beep(0, 880, 0.18);
         beep(0.20, 660, 0.22);
-      } catch {}
+      } catch (e) {
+        // ignore audio errors (unsupported or user gesture required)
+      }
       setActiveTimerSec(null);
       return;
     }

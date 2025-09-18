@@ -31,14 +31,14 @@ export const ToolsTab: React.FC<Props> = ({ card }) => {
       if (p.disabled?.length) {
         setPlateState(arr => arr.map(pl => p.disabled.includes(pl.weight) ? { ...pl, enabled:false } : pl));
       }
-    } catch {/* ignore */}
+  } catch (e) { /* ignore localStorage read */ }
   }, []);
   // persist forward plate calc
   useEffect(()=>{
     try {
       const disabled = plateState.filter(p=>!p.enabled).map(p=>p.weight);
       localStorage.setItem(PLATE_KEY, JSON.stringify({ u:unit, t:target, b:bar, c:customPlates, disabled }));
-    } catch {/* ignore */}
+  } catch (e) { /* ignore localStorage write */ }
   }, [unit, target, bar, customPlates, plateState]);
 
   // When unit toggles, reset plates intelligently
@@ -196,10 +196,10 @@ const ReversePlateCalculator: React.FC = () => {
       if (p.b) setBar(p.b);
       if (p.c) setCustom(p.c);
       if (p.counts) setCounts(p.counts);
-    } catch {}
+  } catch (e) { /* ignore localStorage read */ }
   }, []);
   useEffect(()=>{
-    try { localStorage.setItem(REVERSE_KEY, JSON.stringify({ u:unit, b:bar, c:custom, counts })); } catch {}
+  try { localStorage.setItem(REVERSE_KEY, JSON.stringify({ u:unit, b:bar, c:custom, counts })); } catch (e) { /* ignore quota */ }
   }, [unit, bar, custom, counts]);
 
   // reset when unit changes
