@@ -9,8 +9,6 @@ interface FullProps extends BaseProps { variant?: "full"; }
 interface CompactProps extends BaseProps { variant: "compact"; }
 export type OneRepMaxProps = FullProps | CompactProps;
 
-interface Estimation { formula: OneRmFormula; oneRM: number; }
-
 const FORMULAS: { key: OneRmFormula; label: string; calc: (w:number,r:number)=>number }[] = [
   { key: "Epley", label: "Epley", calc: (w,r)=> r===1? w : w*(1+ r/30) },
   { key: "Brzycki", label: "Brzycki", calc: (w,r)=> w * 36 / (37 - r) },
