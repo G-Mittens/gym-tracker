@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { LogTab } from "./tabs/LogTab";
+import { WorkoutsTab } from "./tabs/WorkoutsTab";
+import { ToolsTab } from "./tabs/ToolsTab";
 import { db, seedExercisesIfEmpty } from "./db";
 import type { Exercise, SetEntry } from "./db";
 import { rid, readFilesAsDataUrls, mmssToSeconds, secondsToMMSS } from "./lib";
@@ -6,7 +9,7 @@ import { rid, readFilesAsDataUrls, mmssToSeconds, secondsToMMSS } from "./lib";
 /* ---------- App ---------- */
 export default function App() {
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState<"log" | "workouts">("log");
+  const [tab, setTab] = useState<"log" | "workouts" | "tools">("log");
 
   // data
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -218,257 +221,44 @@ export default function App() {
       <div style={tabsWrap}>
         <button style={tabBtn(tab === "log")} onClick={() => setTab("log")}>Log</button>
         <button style={tabBtn(tab === "workouts")} onClick={() => setTab("workouts")}>Workouts</button>
+        <button style={tabBtn(tab === "tools")} onClick={() => setTab("tools")}>Tools</button>
       </div>
 
-      {tab === "log" ? (
-        <>
-          {/* Quick Log */}
-          <section style={card}>
-            <h2 style={{ marginTop: 0 }}>Quick Log</h2>
-
-            <label style={label}>Exercise</label>
-            <select value={exerciseId} onChange={e => setExerciseId(e.target.value)} style={inp}>
-              {exercises.map(e => (
-                <option key={e.id} value={e.id}>{e.name} {e.type === "time" ? "⏱" : ""}</option>
-              ))}
-            </select>
-
-            {currentExercise?.type === "time" ? (
-              <div style={row3}>
-                <input inputMode="numeric" value={mm} onChange={e => setMm(e.target.value)} style={inp} placeholder="mm" />
-                <input inputMode="numeric" value={ss} onChange={e => setSs(e.target.value)} style={inp} placeholder="ss" />
-                <button onClick={addSet} style={btn}>Add time</button>
-              </div>
-            ) : (
-              <div style={row3}>
-                <input inputMode="numeric" value={weight} onChange={e => setWeight(e.target.value)} style={inp} placeholder="Weight (lb)" />
-                <input inputMode="numeric" value={reps} onChange={e => setReps(e.target.value)} style={inp} placeholder="Reps" />
-                <button onClick={addSet} style={btn}>Add set</button>
-              </div>
-            )}
-          </section>
-
-          {/* Recent Sets */}
-          <section style={card}>
-            <h2 style={{ marginTop: 0 }}>Recent Sets</h2>
-            {sets.length === 0 && <div style={{ opacity: 0.7 }}>No sets yet — add one above.</div>}
-            {sets.map(s => {
-              const ex = exercises.find(e => e.id === s.exerciseId);
-              const editing = editSetId === s.id;
-              const isTimeSet = s.durationSec != null;
-              return (
-                <div key={s.id} style={{ padding: "8px 0", borderBottom: "1px solid #222" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{ex?.name || s.exerciseId}</div>
-                      <div style={{ opacity: 0.8, fontSize: 12 }}>{new Date(s.ts).toLocaleString()}</div>
-                    </div>
-                    {!editing ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div>{isTimeSet ? secondsToMMSS(s.durationSec || 0) : `${s.weight} lb × ${s.reps}`}</div>
-                        <button style={btnSmall} onClick={() => startEditSet(s)}>Edit</button>
-                        <button style={btnDanger} onClick={() => deleteSet(s.id)}>Delete</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {isTimeSet ? (
-                          <>
-                            <input inputMode="numeric" value={editMM} onChange={e => setEditMM(e.target.value)} style={inpSmall} placeholder="mm" />
-                            <input inputMode="numeric" value={editSS} onChange={e => setEditSS(e.target.value)} style={inpSmall} placeholder="ss" />
-                          </>
-                        ) : (
-                          <>
-                            <input inputMode="numeric" value={editWeight} onChange={e => setEditWeight(e.target.value)} style={inpSmall} placeholder="Weight" />
-                            <input inputMode="numeric" value={editReps} onChange={e => setEditReps(e.target.value)} style={inpSmall} placeholder="Reps" />
-                          </>
-                        )}
-                        <button style={btnSmall} onClick={saveEditSet}>Save</button>
-                        <button style={btnGhostSmall} onClick={cancelEditSet}>Cancel</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </section>
-        </>
-      ) : (
-        <>
-          {/* Workouts tab */}
-          <section style={card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ marginTop: 0 }}>Your Workouts</h2>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button onClick={() => setShowManager(v => !v)} style={btn}>
-                  {showManager ? "Close" : "Add workout"}
-                </button>
-                <button
-                  style={{ ...btnGhost, padding: "8px 10px", fontWeight: 600 }}
-                  onClick={async () => {
-                    const ex = await db.exercises.toArray();
-                    const ss = await db.sets.toArray();
-                    const data = { exercises: ex, sets: ss };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "gym-tracker-backup.json";
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  Export
-                </button>
-                <label style={{ ...btnGhost, padding: "6px 8px", cursor: "pointer" }}>
-                  Import
-                  <input
-                    type="file"
-                    accept="application/json"
-                    onChange={async e => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      try {
-                        const text = await f.text();
-                        const parsed = JSON.parse(text);
-                        if (Array.isArray(parsed.exercises)) await db.exercises.bulkPut(parsed.exercises);
-                        if (Array.isArray(parsed.sets)) await db.sets.bulkPut(parsed.sets);
-                        const xs = await db.exercises.toArray();
-                        setExercises(xs);
-                        const ss = await db.sets.orderBy("ts").reverse().limit(50).toArray();
-                        setSets(ss);
-                        alert("Import complete");
-                      } catch {
-                        alert("Invalid file");
-                      }
-                    }}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {showManager && (
-              <div style={{ border: "1px solid #222", borderRadius: 10, padding: 10, marginBottom: 12 }}>
-                <label style={label}>Name</label>
-                <input value={newName} onChange={e => setNewName(e.target.value)} style={inp} placeholder="e.g., Incline Dumbbell Press" />
-
-                <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                  <label style={chip(newType === "weight")} onClick={() => setNewType("weight")}>Weight × Reps</label>
-                  <label style={chip(newType === "time")} onClick={() => setNewType("time")}>Time (mm:ss)</label>
-                </div>
-
-                <label style={label}>Description</label>
-                <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} style={{ ...inp, height: 80 }} placeholder="Tips, cues…" />
-
-                <label style={label}>Help link (optional)</label>
-                <input value={newLink} onChange={e => setNewLink(e.target.value)} style={inp} placeholder="https://youtu.be/..." />
-
-                <label style={label}>Photos (up to 3)</label>
-                <input type="file" accept="image/*" multiple onChange={handleAddPhotos} />
-                {newPhotos.length > 0 && (
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-                    {newPhotos.map((src, i) => (
-                      <img key={i} src={src} alt={`preview-${i}`} style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8, border: "1px solid #333" }} />
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <button onClick={saveExercise} style={btn}>Save</button>
-                  <button onClick={() => setShowManager(false)} style={btnGhost}>Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {exercises.length === 0 && <div style={{ opacity: 0.7 }}>No workouts yet.</div>}
-            {exercises.map(ex => {
-              const editing = editId === ex.id;
-              const expanded = expandedIds.includes(ex.id) || editing;
-              return (
-                <div key={ex.id} style={{ borderTop: "1px solid #222", padding: "10px 0" }}>
-                  {!editing ? (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          {/* compact arrow toggle only */}
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <button
-                              aria-label={expanded ? "Collapse" : "Expand"}
-                              onClick={() => toggleExpanded(ex.id)}
-                              style={{
-                                width: 28,
-                                height: 28,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                borderRadius: 6,
-                                border: "1px solid #333",
-                                background: expanded ? "#2d6cdf" : "#222",
-                                color: "#eaeaea",
-                                cursor: "pointer",
-                                padding: 0,
-                              }}
-                            >
-                              {expanded ? "▾" : "▸"}
-                            </button>
-                            <div
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => toggleExpanded(ex.id)}
-                              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') toggleExpanded(ex.id); }}
-                              style={{ fontWeight: 600, cursor: "pointer", userSelect: "none" }}
-                              title={expanded ? "Click to collapse" : "Click to expand"}
-                            >
-                              {ex.name} {ex.type === "time" ? "⏱" : ""}
-                            </div>
-                          </div>
-                        </div>
-                        {expanded && ex.description && <div style={{ opacity: 0.9 }}>{ex.description}</div>}
-                        {expanded && ex.link && <div><a href={ex.link} target="_blank" rel="noreferrer" style={{ color: "#7fb1ff" }}>Tutorial</a></div>}
-                        {expanded && ex.photos?.length ? (
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-                            {ex.photos.map((src, i) => (
-                              <img key={i} src={src} alt={`ex-${i}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid #333" }} />
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <button style={btnSmall} onClick={() => beginEditExercise(ex)}>Edit</button>
-                        <button style={btnDanger} onClick={() => deleteExercise(ex.id)}>Delete</button>
-                        {/* left-side arrow toggle now handles expand/collapse */}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <input value={editName} onChange={e => setEditName(e.target.value)} style={inp} placeholder="Name" />
-                      <div style={{ display: "flex", gap: 12 }}>
-                        <label style={chip(editType === "weight")} onClick={() => setEditType("weight")}>Weight × Reps</label>
-                        <label style={chip(editType === "time")} onClick={() => setEditType("time")}>Time (mm:ss)</label>
-                      </div>
-                      <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} style={{ ...inp, height: 80 }} placeholder="Description" />
-                      <input value={editLink} onChange={e => setEditLink(e.target.value)} style={inp} placeholder="https://…" />
-                      <div>
-                        <input type="file" accept="image/*" multiple onChange={handleEditPhotos} />
-                        {editPhotos.length > 0 && (
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-                            {editPhotos.map((src, i) => (
-                              <img key={i} src={src} alt={`edit-${i}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid #333" }} />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button style={btnSmall} onClick={saveEditExercise}>Save</button>
-                        <button style={btnGhostSmall} onClick={cancelEditExercise}>Cancel</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </section>
-        </>
+      {tab === "log" && (
+        <LogTab
+          exercises={exercises}
+          sets={sets}
+          exerciseId={exerciseId}
+          mm={mm} ss={ss} weight={weight} reps={reps}
+          editSetId={editSetId}
+          editMM={editMM} editSS={editSS} editWeight={editWeight} editReps={editReps}
+          currentExercise={currentExercise}
+          addSet={addSet}
+          setExerciseId={setExerciseId}
+          setMm={setMm} setSs={setSs} setWeight={setWeight} setReps={setReps}
+          startEditSet={startEditSet} saveEditSet={saveEditSet} cancelEditSet={cancelEditSet} deleteSet={deleteSet}
+          setEditMM={setEditMM} setEditSS={setEditSS} setEditWeight={setEditWeight} setEditReps={setEditReps}
+          styles={{ card, row3, label, inp, inpSmall, btn, btnSmall, btnDanger, btnGhostSmall }}
+          secondsToMMSS={secondsToMMSS}
+        />
+      )}
+      {tab === "workouts" && (
+        <WorkoutsTab
+          exercises={exercises}
+          expandedIds={expandedIds}
+          showManager={showManager}
+          newName={newName} newType={newType} newDesc={newDesc} newLink={newLink} newPhotos={newPhotos}
+          editId={editId} editName={editName} editType={editType} editDesc={editDesc} editLink={editLink} editPhotos={editPhotos}
+          setNewName={setNewName} setNewType={setNewType} setNewDesc={setNewDesc} setNewLink={setNewLink} setNewPhotos={setNewPhotos}
+          setShowManager={setShowManager}
+          beginEditExercise={beginEditExercise} saveExercise={saveExercise} saveEditExercise={saveEditExercise} cancelEditExercise={cancelEditExercise} deleteExercise={deleteExercise}
+          handleAddPhotos={handleAddPhotos} handleEditPhotos={handleEditPhotos}
+          toggleExpanded={toggleExpanded}
+          styles={{ card, label, inp, btn, btnGhost, chip, btnSmall, btnDanger, inpSmall, btnGhostSmall }}
+        />
+      )}
+      {tab === "tools" && (
+        <ToolsTab card={card} />
       )}
     </div>
   );
