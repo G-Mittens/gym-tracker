@@ -1,4 +1,5 @@
 import React from "react";
+import { toolBox, separator } from "../theme";
 import type { Exercise, SetEntry } from "../db";
 
 interface Props {
@@ -19,14 +20,63 @@ interface Props {
     inp: React.CSSProperties; inpSmall: React.CSSProperties; btn: React.CSSProperties; btnSmall: React.CSSProperties; btnDanger: React.CSSProperties; btnGhostSmall: React.CSSProperties;
   };
   secondsToMMSS(sec: number): string;
+  // timer / stopwatch props
+  activeTimerSec: number | null; // remaining seconds for active countdown
+  startTimer(durationSec: number): void;
+  cancelTimer(): void;
+  stopwatchRunning: boolean;
+  stopwatchSec: number;
+  startStopwatch(): void; stopStopwatch(): void; resetStopwatch(): void;
 }
 
-export const LogTab: React.FC<Props> = ({ exercises, sets, exerciseId, mm, ss, weight, reps, editSetId, editMM, editSS, editWeight, editReps, currentExercise, addSet, setExerciseId, setMm, setSs, setWeight, setReps, startEditSet, saveEditSet, cancelEditSet, deleteSet, setEditMM, setEditSS, setEditWeight, setEditReps, styles, secondsToMMSS }) => {
+export const LogTab: React.FC<Props> = ({ exercises, sets, exerciseId, mm, ss, weight, reps, editSetId, editMM, editSS, editWeight, editReps, currentExercise, addSet, setExerciseId, setMm, setSs, setWeight, setReps, startEditSet, saveEditSet, cancelEditSet, deleteSet, setEditMM, setEditSS, setEditWeight, setEditReps, styles, secondsToMMSS, activeTimerSec, startTimer, cancelTimer, stopwatchRunning, stopwatchSec, startStopwatch, stopStopwatch, resetStopwatch }) => {
   const isTime = currentExercise?.type === "time";
   return (
     <>
       <section style={styles.card}>
-        <h2 style={{ marginTop: 0 }}>Quick Log</h2>
+        <div style={toolBox} className="tool-box">
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12 }} className="quicklog-flex">
+          <h2 style={{ margin: 0 }}>Quick Log</h2>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {[
+              { label: "30s", sec: 30 },
+              { label: "1m", sec: 60 },
+              { label: "3m", sec: 180 },
+              { label: "5m", sec: 300 },
+            ].map(b => (
+              <button
+                key={b.sec}
+                onClick={()=> (activeTimerSec ? undefined : startTimer(b.sec))}
+                disabled={!!activeTimerSec}
+                style={{
+                  padding:"6px 14px",
+                  borderRadius:8,
+                  border:"1px solid #664b16",
+                  background: activeTimerSec ? "#3a2a0b" : "#ff9d3b",
+                  color:"#111",
+                  fontWeight:700,
+                  cursor: activeTimerSec ? "not-allowed" : "pointer"
+                }}
+              >{b.label}</button>
+            ))}
+            {activeTimerSec != null && (
+              <button onClick={cancelTimer} style={{ padding:"6px 10px", borderRadius:8, background:"#552", color:"#fff", border:"1px solid #664b16", fontWeight:600 }}>Cancel</button>
+            )}
+          </div>
+        </div>
+        <div style={{ marginTop:12 }}>
+          {activeTimerSec != null && (
+            <div style={{ fontWeight:600, fontSize:20, color:"#ffb054" }}>Timer: {secondsToMMSS(activeTimerSec)}</div>
+          )}
+          <div style={{ marginTop:8, display:"flex", width:"100%" }}>
+            <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+              {!stopwatchRunning && <button onClick={startStopwatch} style={swBtn}>Start</button>}
+              {stopwatchRunning && <button onClick={stopStopwatch} style={swBtn}>Pause</button>}
+              <button onClick={resetStopwatch} style={swBtn}>Reset</button>
+              <div style={{ fontWeight:600 }}>Stopwatch: <span style={{ fontVariantNumeric:"tabular-nums" }}>{secondsToMMSS(stopwatchSec)}</span></div>
+            </div>
+          </div>
+        </div>
         <label style={styles.label}>Exercise</label>
         <select value={exerciseId} onChange={e => setExerciseId(e.target.value)} style={styles.inp}>
           {exercises.map(e => (
@@ -46,8 +96,11 @@ export const LogTab: React.FC<Props> = ({ exercises, sets, exerciseId, mm, ss, w
             <button onClick={addSet} style={styles.btn}>Add set</button>
           </div>
         )}
+        </div>
       </section>
       <section style={styles.card}>
+        <div style={separator} />
+  <div style={toolBox} className="tool-box">
         <h2 style={{ marginTop: 0 }}>Recent Sets</h2>
         {sets.length === 0 && <div style={{ opacity: 0.7 }}>No sets yet — add one above.</div>}
         {sets.map(s => {
@@ -88,7 +141,10 @@ export const LogTab: React.FC<Props> = ({ exercises, sets, exerciseId, mm, ss, w
               </div>
             );
         })}
+        </div>
       </section>
     </>
   );
 };
+
+const swBtn: React.CSSProperties = { padding:"6px 8px", borderRadius:8, background:"#444", color:"#fff", border:"1px solid #555", fontWeight:600, cursor:"pointer" };
