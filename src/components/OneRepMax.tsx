@@ -35,12 +35,12 @@ export const OneRepMax: React.FC<OneRepMaxProps> = ({ unit, onUnitChange, varian
       if (p?.r) setReps(p.r);
       if (p?.f) setFormula(p.f);
       if (p?.u && onUnitChange) onUnitChange(p.u);
-  } catch (e) { /* ignore parse/persist errors */ }
+  } catch { /* ignore parse/persist errors */ }
   }, [onUnitChange]);
 
   // persist
   useEffect(()=>{
-  try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ w: weight, r: reps, f: formula, u: unit })); } catch (e) { /* ignore quota */ }
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ w: weight, r: reps, f: formula, u: unit })); } catch { /* ignore quota */ }
   }, [weight, reps, formula, unit]);
 
   const repNum = Number(reps) || 0;

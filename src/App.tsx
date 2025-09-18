@@ -108,7 +108,7 @@ export default function App() {
         }
         beep(0, 880, 0.18);
         beep(0.20, 660, 0.22);
-      } catch (e) {
+      } catch {
         // ignore audio errors (unsupported or user gesture required)
       }
       setActiveTimerSec(null);
