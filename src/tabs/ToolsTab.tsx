@@ -10,6 +10,8 @@ interface PlateOption { weight: number; enabled: boolean; }
 const DEFAULT_LB_PLATES = [45, 35, 25, 15, 10, 5, 2.5];
 const DEFAULT_KG_PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
 
+interface CollapsedState { forward:boolean; reverse:boolean; oneRM:boolean; }
+
 export const ToolsTab: React.FC<Props> = ({ card }) => {
   const [unit, setUnit] = useState<"lb" | "kg">("lb");
   const [target, setTarget] = useState("225"); // total weight on bar incl bar
@@ -95,81 +97,106 @@ export const ToolsTab: React.FC<Props> = ({ card }) => {
 
   const plateKeys = Object.keys(result?.perSide || {}).map(Number).sort((a,b)=>b-a);
 
+  const COLLAPSE_KEY = "gym-tracker:tools:collapsed";
+  // Always start collapsed on load (ignore persisted collapse state by design request)
+  const [collapsed, setCollapsed] = useState<CollapsedState>({ forward:true, reverse:true, oneRM:true });
+  // Keep persistence of content states only (no persistence of collapsed) – remove stored key if exists
+  useEffect(()=>{ try { localStorage.removeItem(COLLAPSE_KEY); } catch { /* ignore */ } }, []);
+
+  function toggleCollapse(id: keyof CollapsedState) {
+    setCollapsed(c => ({ ...c, [id]: !c[id] }));
+  }
+
+  const arrow = (open:boolean) => <span style={{ display:"inline-block", transform: open? "rotate(90deg)":"rotate(0deg)", transition:"transform .2s", marginRight:6 }}>▶</span>;
+
   return (
     <section style={card}>
       <h2 style={{ marginTop: 0 }}>Tools</h2>
-  <div style={toolBox} className="tool-box">
-        <h3 style={{ margin: "0 0 6px" }}>Barbell Plate Calculator</h3>
-        <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 12 }}>Compute plate loading for a target barbell weight. Toggle plates to match your gym inventory or add custom sizes.</div>
-
-      <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => toggleUnit("lb")} style={unitBtn(unit === "lb")}>LB</button>
-          <button onClick={() => toggleUnit("kg")} style={unitBtn(unit === "kg")}>KG</button>
-        </div>
-        <div style={row}>
-          <label style={label}>Target ({unit})</label>
-          <input value={target} onChange={e=>setTarget(e.target.value)} style={inp} />
-        </div>
-        <div style={row}>
-          <label style={label}>Bar ({unit})</label>
-          <input value={bar} onChange={e=>setBar(e.target.value)} style={inp} />
-        </div>
-        <div style={{ display: "grid", gap: 4 }}>
-          <label style={label}>Available Plates (each side)</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {plateState.map(p => (
-              <span key={p.weight} onClick={() => togglePlate(p.weight)} style={chip(p.enabled)} title={p.enabled ? "Click to disable" : "Click to enable"}>{p.weight}</span>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "grid", gap: 4 }}>
-          <label style={label}>Custom Plates (comma or space separated)</label>
-          <input value={customPlates} onChange={e=>setCustomPlates(e.target.value)} style={inp} placeholder={unit === "lb" ? "Example: 55 35 7.5" : "Example: 7.5 0.5"} />
-        </div>
-      </div>
-
-        <div style={{ marginTop: 18 }}>
-        {!result && <div style={{ opacity: 0.7 }}>Enter valid numbers (target ≥ bar).</div>}
-        {result && (
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ fontWeight: 600 }}>Load Per Side:</div>
-            {plateKeys.length === 0 && <div style={{ opacity: 0.7 }}>No plates needed (target equals bar weight).</div>}
-            {plateKeys.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {plateKeys.map(w => (
-                  <div key={w} style={plateBox} className="plate-box">
-                    <div style={{ fontSize: 12, opacity: 0.8 }}>{w}{unit}</div>
-                    <div style={{ fontSize: 20, fontWeight: 700 }}>{result.perSide[w]}</div>
-                  </div>
-                ))}
+      {/* Forward Plate Calculator */}
+      <div style={toolBox} className="tool-box">
+        <button onClick={()=>toggleCollapse("forward")} style={collapseHeader(collapsed.forward)}>
+          {arrow(!collapsed.forward)} Barbell Plate Calculator
+        </button>
+        {!collapsed.forward && (
+          <>
+            <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 12, marginTop:8 }}>Compute plate loading for a target barbell weight. Toggle plates to match your gym inventory or add custom sizes.</div>
+            <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => toggleUnit("lb")} style={unitBtn(unit === "lb")}>LB</button>
+                <button onClick={() => toggleUnit("kg")} style={unitBtn(unit === "kg")}>KG</button>
               </div>
-            )}
-            <div style={{ fontSize: 14 }}>
-              {result.exact ? (
-                <span style={{ color: "#62c462" }}>Exact match.</span>
-              ) : (
-                <span style={{ color: "#e5a546" }}>Approximate. Short by {(result.remaining*2).toFixed(2)} {unit}. Using {result.usedTotal.toFixed(2)} {unit}.</span>
+              <div style={row}>
+                <label style={label}>Target ({unit})</label>
+                <input value={target} onChange={e=>setTarget(e.target.value)} style={inp} />
+              </div>
+              <div style={row}>
+                <label style={label}>Bar ({unit})</label>
+                <input value={bar} onChange={e=>setBar(e.target.value)} style={inp} />
+              </div>
+              <div style={{ display: "grid", gap: 4 }}>
+                <label style={label}>Available Plates (each side)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {plateState.map(p => (
+                    <span key={p.weight} onClick={() => togglePlate(p.weight)} style={chip(p.enabled)} title={p.enabled ? "Click to disable" : "Click to enable"}>{p.weight}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: "grid", gap: 4 }}>
+                <label style={label}>Custom Plates (comma or space separated)</label>
+                <input value={customPlates} onChange={e=>setCustomPlates(e.target.value)} style={inp} placeholder={unit === "lb" ? "Example: 55 35 7.5" : "Example: 7.5 0.5"} />
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              {!result && <div style={{ opacity: 0.7 }}>Enter valid numbers (target ≥ bar).</div>}
+              {result && (
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ fontWeight: 600 }}>Load Per Side:</div>
+                  {plateKeys.length === 0 && <div style={{ opacity: 0.7 }}>No plates needed (target equals bar weight).</div>}
+                  {plateKeys.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {plateKeys.map(w => (
+                        <div key={w} style={plateBox} className="plate-box">
+                          <div style={{ fontSize: 12, opacity: 0.8 }}>{w}{unit}</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>{result.perSide[w]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 14 }}>
+                    {result.exact ? (
+                      <span style={{ color: "#62c462" }}>Exact match.</span>
+                    ) : (
+                      <span style={{ color: "#e5a546" }}>Approximate. Short by {(result.remaining*2).toFixed(2)} {unit}. Using {result.usedTotal.toFixed(2)} {unit}.</span>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
-            </div>
-          )}
-        </div>
-      </div>
-  <div style={separator} />
-  <div style={toolBox} className="tool-box">
-        <ReversePlateCalculator />
+          </>
+        )}
       </div>
       <div style={separator} />
-  <div style={toolBox} className="tool-box">
-        <OneRepMax unit={unit} onUnitChange={setUnit} />
+      {/* Reverse Plate Calculator */}
+      <div style={toolBox} className="tool-box">
+        <button onClick={()=>toggleCollapse("reverse")} style={collapseHeader(collapsed.reverse)}>
+          {arrow(!collapsed.reverse)} Reverse Plate Total
+        </button>
+        {!collapsed.reverse && <div style={{ marginTop:8 }}><ReversePlateCalculator hideTitle /></div>}
+      </div>
+      <div style={separator} />
+      {/* One Rep Max */}
+      <div style={toolBox} className="tool-box">
+        <button onClick={()=>toggleCollapse("oneRM")} style={collapseHeader(collapsed.oneRM)}>
+          {arrow(!collapsed.oneRM)} 1RM Estimator
+        </button>
+        {!collapsed.oneRM && <div style={{ marginTop:8 }}><OneRepMax unit={unit} onUnitChange={setUnit} showTitle={false} /></div>}
       </div>
     </section>
   );
 };
 
 /* ---------------- Reverse Plate Calculator (separate) ---------------- */
-const ReversePlateCalculator: React.FC = () => {
+const ReversePlateCalculator: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => {
   const [unit, setUnit] = useState<"lb"|"kg">("lb");
   const [bar, setBar] = useState("45");
   const [custom, setCustom] = useState("");
@@ -228,7 +255,7 @@ const ReversePlateCalculator: React.FC = () => {
 
   return (
     <div>
-      <h3 style={{ margin: "0 0 6px" }}>Reverse Plate Total</h3>
+      {!hideTitle && <h3 style={{ margin: "0 0 6px" }}>Reverse Plate Total</h3>}
       <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 12 }}>Enter how many plates of each size are on one side to get total bar weight.</div>
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <button onClick={()=>toggleUnit("lb")} style={unitBtn(unit==="lb")}>LB</button>
@@ -302,3 +329,17 @@ const plateBox: React.CSSProperties = {
 // toolBox & separator now imported from theme.ts
 const reversePlateBox: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 4, background: "#181818", border: "1px solid #333", padding: 6, borderRadius: 10, width: 70, alignItems: "center" };
 const reverseInput: React.CSSProperties = { width: 40, padding: "4px 4px", borderRadius: 6, background: "#0f0f0f", color: "#eaeaea", border: "1px solid #333", textAlign: "center" };
+const collapseHeader = (_open:boolean): React.CSSProperties => ({
+  width:"100%",
+  textAlign:"left",
+  background:"transparent",
+  color:"#eaeaea",
+  border:"none",
+  cursor:"pointer",
+  fontSize:16,
+  fontWeight:700,
+  padding:"4px 2px",
+  display:"flex",
+  alignItems:"center",
+  outline:"none"
+});

@@ -4,6 +4,7 @@ export type OneRmFormula = "Epley" | "Brzycki" | "Lombardi" | "Mayhew" | "OCONNE
 interface BaseProps {
   unit: "lb" | "kg";
   onUnitChange?(u: "lb" | "kg"): void;
+  showTitle?: boolean; // for full variant, defaults true
 }
 interface FullProps extends BaseProps { variant?: "full"; }
 interface CompactProps extends BaseProps { variant: "compact"; }
@@ -19,7 +20,7 @@ const FORMULAS: { key: OneRmFormula; label: string; calc: (w:number,r:number)=>n
 
 const LOCAL_KEY = "gym-tracker:1rm";
 
-export const OneRepMax: React.FC<OneRepMaxProps> = ({ unit, onUnitChange, variant }) => {
+export const OneRepMax: React.FC<OneRepMaxProps> = ({ unit, onUnitChange, variant, showTitle = true }) => {
   const [weight, setWeight] = useState("225");
   const [reps, setReps] = useState("5");
   const [formula, setFormula] = useState<OneRmFormula>("Epley");
@@ -89,7 +90,7 @@ export const OneRepMax: React.FC<OneRepMaxProps> = ({ unit, onUnitChange, varian
 
   return (
     <div>
-      <h3 style={{ margin: "0 0 8px" }}>1RM Estimator</h3>
+      {showTitle && <h3 style={{ margin: "0 0 8px" }}>1RM Estimator</h3>}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display:"grid", gap:4 }}>
           <label style={label}>Weight ({unit})</label>
