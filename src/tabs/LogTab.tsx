@@ -68,13 +68,11 @@ export const LogTab: React.FC<Props> = ({ exercises, sets, exerciseId, mm, ss, w
           {activeTimerSec != null && (
             <div style={{ fontWeight:600, fontSize:20, color:"#ffb054" }}>Timer: {secondsToMMSS(activeTimerSec)}</div>
           )}
-          <div style={{ marginTop:8, display:"flex", width:"100%" }}>
-            <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-              {!stopwatchRunning && <button onClick={startStopwatch} style={swBtn}>Start</button>}
-              {stopwatchRunning && <button onClick={stopStopwatch} style={swBtn}>Pause</button>}
-              <button onClick={resetStopwatch} style={swBtn}>Reset</button>
-              <div style={{ fontWeight:600 }}>Stopwatch: <span style={{ fontVariantNumeric:"tabular-nums" }}>{secondsToMMSS(stopwatchSec)}</span></div>
-            </div>
+          <div style={{ marginTop:8, display:"flex", width:"100%", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+            {!stopwatchRunning && <button onClick={startStopwatch} style={swBtn}>Start</button>}
+            {stopwatchRunning && <button onClick={stopStopwatch} style={swBtn}>Pause</button>}
+            <button onClick={resetStopwatch} style={swBtn}>Reset</button>
+            <div style={{ fontWeight:600 }}>Stopwatch: <span style={{ fontVariantNumeric:"tabular-nums" }}>{secondsToMMSS(stopwatchSec)}</span></div>
           </div>
         </div>
         <label style={styles.label}>Exercise</label>
