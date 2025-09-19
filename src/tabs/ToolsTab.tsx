@@ -114,7 +114,7 @@ export const ToolsTab: React.FC<Props> = ({ card }) => {
       <h2 style={{ marginTop: 0 }}>Tools</h2>
       {/* Forward Plate Calculator */}
       <div style={toolBox} className="tool-box">
-        <button onClick={()=>toggleCollapse("forward")} style={collapseHeader(collapsed.forward)}>
+  <button onClick={()=>toggleCollapse("forward")} style={collapseHeader()}>
           {arrow(!collapsed.forward)} Barbell Plate Calculator
         </button>
         {!collapsed.forward && (
@@ -178,7 +178,7 @@ export const ToolsTab: React.FC<Props> = ({ card }) => {
       <div style={separator} />
       {/* Reverse Plate Calculator */}
       <div style={toolBox} className="tool-box">
-        <button onClick={()=>toggleCollapse("reverse")} style={collapseHeader(collapsed.reverse)}>
+  <button onClick={()=>toggleCollapse("reverse")} style={collapseHeader()}>
           {arrow(!collapsed.reverse)} Reverse Plate Total
         </button>
         {!collapsed.reverse && <div style={{ marginTop:8 }}><ReversePlateCalculator hideTitle /></div>}
@@ -186,7 +186,7 @@ export const ToolsTab: React.FC<Props> = ({ card }) => {
       <div style={separator} />
       {/* One Rep Max */}
       <div style={toolBox} className="tool-box">
-        <button onClick={()=>toggleCollapse("oneRM")} style={collapseHeader(collapsed.oneRM)}>
+  <button onClick={()=>toggleCollapse("oneRM")} style={collapseHeader()}>
           {arrow(!collapsed.oneRM)} 1RM Estimator
         </button>
         {!collapsed.oneRM && <div style={{ marginTop:8 }}><OneRepMax unit={unit} onUnitChange={setUnit} showTitle={false} /></div>}
@@ -329,7 +329,7 @@ const plateBox: React.CSSProperties = {
 // toolBox & separator now imported from theme.ts
 const reversePlateBox: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 4, background: "#181818", border: "1px solid #333", padding: 6, borderRadius: 10, width: 70, alignItems: "center" };
 const reverseInput: React.CSSProperties = { width: 40, padding: "4px 4px", borderRadius: 6, background: "#0f0f0f", color: "#eaeaea", border: "1px solid #333", textAlign: "center" };
-const collapseHeader = (_open:boolean): React.CSSProperties => ({
+const collapseHeader = (): React.CSSProperties => ({
   width:"100%",
   textAlign:"left",
   background:"transparent",
